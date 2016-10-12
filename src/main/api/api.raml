@@ -1,0 +1,136 @@
+#%RAML 1.0
+title: financialservices-as
+version: v1
+protocols: [HTTPS]
+baseUri: https://financialservices-as.cloudhub.io/api/{version}/oauth2
+
+types:
+      
+  tokenInfo: 
+    type: object
+    properties:
+      id_token?:
+        type: string
+        description: ID token as JWT.
+      access_token: 
+        type: string
+        description: Access token to be used when making API calls
+      token_type: 
+        type: string
+        enum: [bearer]
+        description: Type of token
+      refresh_token?: 
+        type: string
+        description: Can be used to obtain new access_token after it expires.
+      expires_in?: 
+        type: integer
+        description: Time to live in seconds
+      scope?: 
+        type: string
+        description: Allowed scopes (space separated)
+      
+
+/authorize:
+  description: |
+    This endpoint will redirect to the provided URI after the user authentication passes. The redirect will contain authorization code that can then be used (for limited time) to obtain the access-token.
+  get:
+    queryParameters:
+      response_type: 
+        required: true
+        enum: [code]
+      client_id: 
+        required: true
+        description: Client ID of the registered App.
+      redirect_uri:
+        required: false
+        description: Redirect URI defined with your registered App. If not selected, the registered one will be used. 
+      scope:
+        required: false
+        description: Scope of the Access Token requested. Space separated list.
+      state:
+        required: false
+        description: | 
+          Any client state that needs to be passed on to the client request URI.
+    responses:
+      302:
+        description: Will redirect to the redirect URI appending authorization code and possible state.
+      401:
+        description: Unauthorized
+        
+        
+
+/token:
+  description: |
+    This endpoint will return access token given that the request contains valid client_id, client_secret and authorization_code.
+  post: 
+    body:
+      application/x-www-form-urlencoded:
+        properties:
+          code: 
+            required: true
+            description: The authorization code received by the authorization server
+          grant_type:
+            required: true
+            description: Must be set to authorization_code
+            enum: [authorization_code]
+          client_id:
+            required: true
+            description: The client application's id
+          client_secret:
+            required: true
+            description: The client application's client secret
+                
+
+    responses:
+      200:
+        body:
+          application/json:
+            type: tokenInfo
+            example: |
+              {
+                "access_token": "AYjcyMzY3ZDhiNmJkNTY",
+                "token_type": "bearer"
+              }
+        
+/validate:
+  get: 
+    queryParameters:
+      access_token: 
+        required: true
+        description: The access token
+    responses:
+        200:
+          body:
+            application/json:
+              type: tokenInfo
+              example: |
+                {
+                  "access_token": "AYjcyMzY3ZDhiNmJkNTY",
+                  "token_type": "bearer",
+                  "scope" : "accounts"
+                }
+/userinfo:
+  description: |
+    This endpoint will redirect to the provided URI after the user authentication passes. The redirect will contain authorization code that can then be used (for limited time) to obtain the access-token.
+  get:
+    headers: 
+      Authorization:
+        type: string
+        description: The access token.
+        example: Bearer AStasataslkad34asdioj
+    responses:
+      200:
+        body: 
+          application/json: 
+            example: |
+              {
+                "sub"                     : "John Doe",
+                "email"                   : "john.doe@example.com",
+                "name"                    : "John Doe",
+                "phone"                   : "555-0638"
+                "picture"                 : "https://examplebank.com/users/johndoe.jpg"
+              }
+
+/.well-known/openid-configuration:
+
+
