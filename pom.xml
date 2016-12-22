@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.mule.templates</groupId>
-	<artifactId>template-financials-auth-server</artifactId>
+	<artifactId>template-banking-auth-server</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>mule</packaging>
-	<name>Mule template-financials-auth-server Application</name>
+	<name>Mule template-banking-auth-server Application</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<mule.version>3.8.1</mule.version>
+		<mule.version>3.8.3</mule.version>
 		<mule.tools.version>1.2</mule.tools.version>
 	</properties>
-
+  
 	<build>
 		<plugins>
 			<plugin>
@@ -26,7 +25,13 @@
 				<extensions>true</extensions>
 				<configuration>
 					<copyToAppsDirectory>true</copyToAppsDirectory>
-				</configuration>
+				<inclusions>
+                        <inclusion>
+                            <groupId>com.mulesoft.security</groupId>
+                            <artifactId>mule-module-security-oauth2-provider</artifactId>
+                        </inclusion>
+                    </inclusions>
+                </configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -55,6 +60,41 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.mule.tools.maven</groupId>
+				<artifactId>mule-maven-plugin</artifactId>
+				<version>2.1.1</version>
+				<configuration>
+						<deploymentType>cloudhub</deploymentType>
+						<muleVersion>${cloudhub.mule.version}</muleVersion>
+						<username>${anypoint.user}</username>
+						<password>${anypoint.password}</password>
+						<applicationName>${cloudhub.app.name}</applicationName>
+						<redeploy>true</redeploy>
+						<environment>${cloudhub.environment}</environment>
+						<businessGroup>${anypoint.business.group}</businessGroup>
+						<workerType>${cloudhub.worker.type}</workerType>
+						<workers>${cloudhub.workers}</workers>
+						<properties>
+							<mule.env>${mule.env}</mule.env>
+							<anypoint.platform.analytics_base_uri>https://analytics-ingest.anypoint.mulesoft.com</anypoint.platform.analytics_base_uri>
+							<anypoint.platform.coreservice_base_uri>https://anypoint.mulesoft.com/accounts</anypoint.platform.coreservice_base_uri>
+							<anypoint.platform.platform_base_uri>https://anypoint.mulesoft.com/apiplatform</anypoint.platform.platform_base_uri>
+							<anypoint.platform.contracts_base_uri>https://anypoint.mulesoft.com/apigateway/ccs</anypoint.platform.contracts_base_uri>
+							<anypoint.platform.client_id>${anypoint.platform.client_id}</anypoint.platform.client_id>
+							<anypoint.platform.client_secret>${anypoint.platform.client_secret}</anypoint.platform.client_secret>							
+						</properties>
+				</configuration>
+				<executions>
+						<execution>
+							<id>deploy</id>
+							<phase>deploy</phase>
+							<goals>
+								<goal>deploy</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
 		</plugins>
 	</build>
 
@@ -137,19 +177,51 @@
 			<version>${mule.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.mule.modules</groupId>
-			<artifactId>mule-module-oauth</artifactId>
-			<version>${mule.version}</version>
-			<scope>provided</scope>
-		</dependency>
+
 		<dependency>
 			<groupId>cglib</groupId>
 			<artifactId>cglib</artifactId>
 			<version>3.2.2</version>
 			<scope>provided</scope>
 		</dependency>
-	</dependencies>
+	    <dependency>
+		      <groupId>org.springframework.security</groupId>
+		      <artifactId>spring-security-core</artifactId>
+		      <version>3.1.0.RELEASE</version>
+		      <scope>provided</scope>
+	    </dependency>
+	<dependency>
+            <groupId>org.mule.modules</groupId>
+            <artifactId>mule-module-spring-config</artifactId>
+            <version>${mule.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    <dependency>
+            <groupId>com.mulesoft.anypoint</groupId>
+            <artifactId>mule-module-cors-gw</artifactId>
+            <version>3.8.3</version>
+            <scope>provided</scope>
+        </dependency>
+    <dependency>
+            <groupId>com.mulesoft.security</groupId>
+            <artifactId>mule-module-security-oauth2-provider</artifactId>
+            <version>1.6.3-SNAPSHOT</version>
+        </dependency> 
+        
+        <dependency>
+			<groupId>org.bitbucket.b_c</groupId>
+			<artifactId>jose4j</artifactId>
+			<version>0.5.2</version>
+		</dependency>
+        
+        
+    <dependency>
+            <groupId>com.mulesoft.anypoint</groupId>
+            <artifactId>api-gateway-client</artifactId>
+            <version>3.8.3</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 	<repositories>
 		<repository>
