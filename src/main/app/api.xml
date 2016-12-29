@@ -1,26 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:api-platform-gw="http://www.mulesoft.org/schema/mule/api-platform-gw"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/api-platform-gw http://www.mulesoft.org/schema/mule/api-platform-gw/current/mule-api-platform-gw.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
-    <http:listener-config name="api-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
+   
     <apikit:config name="api-config" raml="api.raml" consoleEnabled="false" doc:name="Router" />
+  
+    <api-platform-gw:api apiName="${api.name}" version="${api.version}" flowRef="api-main" create="true" apikitRef="api-config" doc:name="API Autodiscovery"/>
+        
     <flow name="api-main">
         <http:listener config-ref="api-httpListenerConfig" path="/api/*" doc:name="HTTP" />
         <apikit:router config-ref="api-config" doc:name="APIkit Router" />
         <exception-strategy ref="api-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy" />
     </flow>
+    
     <flow name="api-console">
         <http:listener config-ref="api-httpListenerConfig" path="/console/*" doc:name="HTTP" />
         <apikit:console config-ref="api-config" doc:name="APIkit Console" />
     </flow>
+    
     <flow name="get:/authorize:api-config">
         <logger level="INFO" doc:name="show authorization page to enter credentials, unless client_id is not registered or redirect_uri is not valid"/>
         <logger level="INFO" doc:name="If credentials are valid and clientId exists, generate and save time-bound authorization code"/>
         <logger level="INFO" doc:name="redirect to provided redirect_uri"/>
-
     </flow>
 
     <flow name="post:/token:application/x-www-form-urlencoded:api-config">
@@ -29,17 +35,22 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
         <logger level="INFO" doc:name="Compute token and save it to token-object-store" doc:description="If the client credentials and authorization code are correct, the endpoint should compute a token and return it as a component of JSON object. This token is inserted in the token_object_store."/>
         <set-payload value="{&#xA;  &quot;access_token&quot;: &quot;AYjcyMzY3ZDhiNmJkNTY&quot;,&#xA;  &quot;token_type&quot;: &quot;bearer&quot;&#xA;}" doc:name="Return token to the caller"/>
     </flow>
+    
     <flow name="get:/validate:api-config">
         <logger level="INFO" doc:name="Validates the token. APIs call this to verify that token is authentic."/>
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+        <flow-ref name="validateToken" doc:name="validateToken"/>
     </flow>
+    
     <flow name="get:/userinfo:api-config">
         <logger level="INFO" doc:name="Retrieves user details"/>
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
+    
     <flow name="get:/openid-configuration:api-config">
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
     </flow>
+    
     <apikit:mapping-exception-strategy name="api-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
             <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
