@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.mulesoft.templates.oauth.provider;
+package org.mule.templates.oauth2;
 
 import java.util.HashMap;
 import java.util.Map;

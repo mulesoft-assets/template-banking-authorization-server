@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.mulesoft.templates.oauth.user;
+package org.mule.templates.oauth2;
 
 import java.util.Collection;
 import java.util.Map;
@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.User;
  * Extension of the User object provided by Spring.
  *
  */
-public class AnypointUser extends User{
+public class ExternalIdServiceUser extends User{
 	
 	private Map<String,String> customProperties;
 
@@ -29,7 +29,7 @@ public class AnypointUser extends User{
 	 * @param id
 	 * @param account
 	 */
-	public AnypointUser(String username, String password, Collection<? extends GrantedAuthority> authorities, Map<String,String> customProperties) {
+	public ExternalIdServiceUser(String username, String password, Collection<? extends GrantedAuthority> authorities, Map<String,String> customProperties) {
 		super(username, password, authorities);
 		this.customProperties = customProperties;
 	}
@@ -39,7 +39,7 @@ public class AnypointUser extends User{
 	 * @param password
 	 * @param authorities
 	 */
-	public AnypointUser(String username, String password, Collection<? extends GrantedAuthority> authorities) {
+	public ExternalIdServiceUser(String username, String password, Collection<? extends GrantedAuthority> authorities) {
 		super(username, password, authorities);
 		
 	}
@@ -53,7 +53,7 @@ public class AnypointUser extends User{
 	 * @param accountNonLocked
 	 * @param authorities
 	 */
-	public AnypointUser(String username, String password, boolean enabled, boolean accountNonExpired,
+	public ExternalIdServiceUser(String username, String password, boolean enabled, boolean accountNonExpired,
 			boolean credentialsNonExpired, boolean accountNonLocked,
 			Collection<? extends GrantedAuthority> authorities) {
 		super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
