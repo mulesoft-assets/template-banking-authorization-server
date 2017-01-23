@@ -1,4 +1,4 @@
-package com.mulesoft.templates.oauth.provider;
+package org.mule.templates.oauth2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,14 +14,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.mulesoft.templates.oauth.user.AnypointUser;
-
 /**
  *
  * Custom authentication provider that makes external calls to validate username/password combinations.
  * If appropriate Authentication is returned, an OAuth token can be provisioned from the Mule application.
  */
-public class CustomResourceOwnerAuthProvider implements AuthenticationProvider{
+public class ExternalIdResourceOwnerAuthProvider implements AuthenticationProvider{
 
 	private final String AUTH_KEY = "authenticated";
 
@@ -29,9 +27,9 @@ public class CustomResourceOwnerAuthProvider implements AuthenticationProvider{
 
 	private final String DEFAULT_GRANT = "ROLE_USER";
 
-	private CustomHttpAuthService customHttpAuthService;
+	private ExternalIdHttpAuthService externalIdHttpAuthService;
 	
-	private static final Logger LOGGER = Logger.getLogger(CustomResourceOwnerAuthProvider.class);
+	private static final Logger LOGGER = Logger.getLogger(ExternalIdResourceOwnerAuthProvider.class);
 	
 
 	/**
@@ -49,12 +47,12 @@ public class CustomResourceOwnerAuthProvider implements AuthenticationProvider{
 		Authentication auth = null;
 		String username = credentials.getName();
 		String password = credentials.getCredentials().toString();
-		Map<String, String> userDetails = customHttpAuthService.callService(username, password);
+		Map<String, String> userDetails = externalIdHttpAuthService.callService(username, password);
 
 		if (isUserAuthenticated(userDetails)) {
 			List<GrantedAuthority> grantedAuths = new ArrayList<GrantedAuthority>();
 			grantedAuths.add(new SimpleGrantedAuthority(DEFAULT_GRANT));
-			UserDetails principal = new AnypointUser(userDetails.get(USER_KEY), password, grantedAuths, userDetails);
+			UserDetails principal = new ExternalIdServiceUser(userDetails.get(USER_KEY), password, grantedAuths, userDetails);
 			auth = new UsernamePasswordAuthenticationToken(principal, password, grantedAuths);
 			
 			//Adding this to preserve the UserDetails -> AnypointUser that is going to be used by the Custom Token Generator Strategy, 
@@ -89,10 +87,10 @@ public class CustomResourceOwnerAuthProvider implements AuthenticationProvider{
 	}
 
 	/**
-	 * @param customHttpAuthService the customHttpAuthService to set
+	 * @param externalIdHttpAuthService the externalIdHttpAuthService to set
 	 */
-	public void setCustomHttpAuthService(CustomHttpAuthService customHttpAuthService) {
-		this.customHttpAuthService = customHttpAuthService;
+	public void setExternalIdHttpAuthService(ExternalIdHttpAuthService externalIdHttpAuthService) {
+		this.externalIdHttpAuthService = externalIdHttpAuthService;
 	}
 
 }

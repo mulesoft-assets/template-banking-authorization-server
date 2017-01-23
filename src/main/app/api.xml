@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mule xmlns:api-platform-gw="http://www.mulesoft.org/schema/mule/api-platform-gw"
-	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
-http://www.mulesoft.org/schema/mule/api-platform-gw http://www.mulesoft.org/schema/mule/api-platform-gw/current/mule-api-platform-gw.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/api-platform-gw http://www.mulesoft.org/schema/mule/api-platform-gw/current/mule-api-platform-gw.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
@@ -21,19 +21,6 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
     <flow name="api-console">
         <http:listener config-ref="api-httpListenerConfig" path="/console/*" doc:name="HTTP" />
         <apikit:console config-ref="api-config" doc:name="APIkit Console" />
-    </flow>
-    
-    <flow name="get:/authorize:api-config">
-        <logger level="INFO" doc:name="show authorization page to enter credentials, unless client_id is not registered or redirect_uri is not valid"/>
-        <logger level="INFO" doc:name="If credentials are valid and clientId exists, generate and save time-bound authorization code"/>
-        <logger level="INFO" doc:name="redirect to provided redirect_uri"/>
-    </flow>
-
-    <flow name="post:/token:application/x-www-form-urlencoded:api-config">
-        <logger message="#[message.inboundProperties.'http.query.params']" level="INFO" doc:name="params in body?"/>
-        <logger level="INFO" doc:name="Validate client_id, client_secret and code" doc:description="There should be populated client_object_store and token_object_store prior to using this endpoint. If no matching client_id is defined, or the client_secret does not match or the authorization code is not valid, the endpoint should return an error message. "/>
-        <logger level="INFO" doc:name="Compute token and save it to token-object-store" doc:description="If the client credentials and authorization code are correct, the endpoint should compute a token and return it as a component of JSON object. This token is inserted in the token_object_store."/>
-        <set-payload value="{&#xA;  &quot;access_token&quot;: &quot;AYjcyMzY3ZDhiNmJkNTY&quot;,&#xA;  &quot;token_type&quot;: &quot;bearer&quot;&#xA;}" doc:name="Return token to the caller"/>
     </flow>
     
     <flow name="get:/validate:api-config">
