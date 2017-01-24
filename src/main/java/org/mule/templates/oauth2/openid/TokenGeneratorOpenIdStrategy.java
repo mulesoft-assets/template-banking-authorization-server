@@ -8,13 +8,11 @@ import java.io.InputStream;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
-import org.jose4j.jwe.ContentEncryptionAlgorithmIdentifiers;
 import org.jose4j.jwe.JsonWebEncryption;
 import org.jose4j.jwe.KeyManagementAlgorithmIdentifiers;
 import org.jose4j.jwk.JsonWebKey;
 import org.jose4j.jwk.OctetSequenceJsonWebKey;
 import org.jose4j.jwk.RsaJsonWebKey;
-import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.lang.JoseException;
@@ -31,11 +29,12 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 	private static final Logger LOGGER = Logger.getLogger(TokenGeneratorOpenIdStrategy.class);
 	
 	// Passed by parameter
+	private Long ttlSeconds;
 	private String issuer;
-	
-	// TODO Move to parameters / properties
-	private static final String SIGNING_KEY_PATH = "jwk-pair.jwk";
-	private static final String ENCRYPTION_KEY_PATH = "shared-key.jwk";
+	private String signingKeyPath;
+	private String encryptionKeyPath;
+	private String encryptionAlgorithm;
+	private String signingAlgorithm;
 	
 	/**
 	 * @see org.mule.modules.oauth2.provider.token.generator.TokenGeneratorStrategy#generateToken()
@@ -49,7 +48,7 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 		// JWS key
 		String signingKeyJWKString;
 		try {
-			signingKeyJWKString = loadResource(SIGNING_KEY_PATH);
+			signingKeyJWKString = loadResource(signingKeyPath);
 		} catch (IOException e) {
 			throw new RuntimeException("Signing key not found");
 		}
@@ -63,7 +62,7 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 		// JWE key
 		String encryptionKeyJWKString;
 		try {
-			encryptionKeyJWKString = loadResource(ENCRYPTION_KEY_PATH);
+			encryptionKeyJWKString = loadResource(encryptionKeyPath);
 		} catch (IOException e) {
 			throw new RuntimeException("Encryption key not found");
 		}
@@ -80,13 +79,13 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 		JwtClaims claims = buildJWTClaims( user);
 		String jws;
 		try {
-			jws = buildJWS(claims.toJson(), AlgorithmIdentifiers.RSA_USING_SHA256, signingKey);
+			jws = buildJWS(claims.toJson(), signingAlgorithm, signingKey);
 		} catch (JoseException e) {
 			throw new RuntimeException("Signing token failed: " + e.getMessage());
 		}
 		String jwe;
 		try {
-			jwe = buildNestedJWE(jws, ContentEncryptionAlgorithmIdentifiers.AES_128_GCM, symmetricKey);
+			jwe = buildNestedJWE(jws, encryptionAlgorithm, symmetricKey);
 		} catch (JoseException e) {
 			throw new RuntimeException("Encrypting token failed: " + e.getMessage());
 		}
@@ -94,6 +93,43 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 		return jwe;
 	}
 
+	/**
+	 * @param setSigningKey the JWT signing key path 
+	 */
+	public void setSigningKeyPath(String signingKeyPath) {
+		this.signingKeyPath = signingKeyPath;
+	}
+	
+	/**
+	 * @param setTtlSeconds the JWT token validity time in seconds
+	 */
+	public void setTtlSeconds(Long ttlSeconds) {
+		this.ttlSeconds = ttlSeconds;
+	}
+	
+	/**
+	 * @param setEncryptionKey the JWT encryption key path 
+	 */
+	public void setEncryptionKeyPath(String encryptionKeyPath) {
+		this.encryptionKeyPath = encryptionKeyPath;
+	}
+	
+	/**
+	 * 
+	 * @param signingAlgorithm Signing algorithm for inner JWS (RS256, RS384 or RS512).
+	 */
+	public void setSigningAlgorithm(String signingAlgorithm) {
+		this.signingAlgorithm = signingAlgorithm;
+	}
+	
+	/**
+	 * 
+	 * @param encryptionAlgorithm Content encryption algorithm (A128GCM or A256GCM).
+	 */
+	public void setEncryptionAlgorithm(String encryptionAlgorithm) {
+		this.encryptionAlgorithm = encryptionAlgorithm;
+	}
+	
 	/**
 	 * @param issuer the JWT issuer to set
 	 */
@@ -106,11 +142,11 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 		
 		// TODO Pass variable claims
 	    claims.setIssuer(issuer);  
-	    claims.setExpirationTimeMinutesInTheFuture(30*24*60); 
+	    claims.setExpirationTimeMinutesInTheFuture(ttlSeconds * 60); 
 //	    claims.setGeneratedJwtId(); 
 	    claims.setIssuedAtToNow();
 	    claims.setSubject(user.getUsername()); 
-	    claims.setClaim("ssn", user.getCustomProperties().get("SSN"));
+	    claims.setClaim("ssn", user.getCustomProperties().get("ssn"));
 	    
 	    return claims;
 	}
@@ -149,5 +185,6 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 		scanner.close();
 		inputStream.close();
 		return fileString;
-	}	
+	}
+
 }
