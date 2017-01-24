@@ -26,6 +26,6 @@ public class ExternalIdHttpAuthService extends AbstractCustomHttpService{
 	 * @see org.mule.templates.oauth2.AbstractCustomHttpService#getMethod()
 	 */
 	public OperationOptions getMethod(){
-		return HttpRequestOptionsBuilder.newOptions().method(HttpConstants.Methods.POST.name()).build();
+		return HttpRequestOptionsBuilder.newOptions().method(HttpConstants.Methods.GET.name()).build();
 	}
 }

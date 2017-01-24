@@ -18,7 +18,7 @@ http://www.springframework.org/schema/beans http://www.springframework.org/schem
 http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd">
-		
+
 	<!-- register a security manager within the mule application -->
 	<mule-ss:security-manager name="multiple-users-security-manager" doc:name="Spring Security Provider">
 		<mule-ss:delegate-security-provider name="externalIdResourceOwnerSecurityProvider" delegate-ref="resourceOwnerAuthenticationManager" />
@@ -28,14 +28,20 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
 	<spring:beans>
 		<spring:bean name="tokenGeneratorOpenIdStrategy" class="org.mule.templates.oauth2.openid.TokenGeneratorOpenIdStrategy" >
 			<spring:property name="issuer" value="${jwt.issuer}" />
-		</spring:bean> 
+			<spring:property name="signingKeyPath" value="${jwt.signing.key.path}" />
+			<spring:property name="encryptionKeyPath" value="${jwt.encryption.key.path}" />
+			<spring:property name="ttlSeconds" value="${oauth.token.ttl}" />
+			<spring:property name="signingAlgorithm" value="${jwt.signing.algorithm}" />
+			<spring:property name="encryptionAlgorithm" value="${jwt.encryption.algorithm}" />
+		</spring:bean>
 		<spring:bean name="jwtTokenStore" class="org.mule.templates.oauth2.openid.OpenIdTokenStore" >
 			<spring:property name="issuer" value="${jwt.issuer}" />
+			<spring:property name="encryptionKeyPath" value="${jwt.encryption.key.path}" />
 			<spring:property name="publicKeysUrl" value="${jwt.public.keys.url}" />
-		</spring:bean> 
+		</spring:bean>
 
 		<spring:bean class="org.mule.templates.oauth2.ExternalIdResourceOwnerAuthProvider" id="externalIdResourceOwnerAuthProvider" scope="singleton">
-			<spring:property name="externalIdHttpAuthService" ref="externalIdHttpAuthService" />		
+			<spring:property name="externalIdHttpAuthService" ref="externalIdHttpAuthService" />
 		</spring:bean>
 		<spring:bean class="org.mule.templates.oauth2.ExternalIdHttpAuthService" id="externalIdHttpAuthService" scope="singleton">
 			<spring:property name="httpHost" value="${http.external.service.host}" />
@@ -49,7 +55,7 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
 
 	<!-- store oauth client-specific info -->
 	<api-platform-gw:client-store id="multiple-users-client-store" doc:name="Client Store" />
-	
+
 	<!-- validates incoming client credentials -->
 	<api-platform-gw:client-security-provider id="multiple-users-client-security-provider" doc:name="Security Provider" />
 
@@ -57,8 +63,8 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
 	<oauth2-provider:config name="oauth2-provider"
 		providerName="${oauth.provider.name}"
 		resourceOwnerSecurityProvider-ref="externalIdResourceOwnerSecurityProvider"
-		tokenGeneratorStrategy-ref="tokenGeneratorOpenIdStrategy"	
-		clientSecurityProvider-ref="multiple-users-client-security-provider"	
+		tokenGeneratorStrategy-ref="tokenGeneratorOpenIdStrategy"
+		clientSecurityProvider-ref="multiple-users-client-security-provider"
 		clientStore-ref="multiple-users-client-store" defaultScopes="${oauth.scopes}"
 		tokenStore-ref="jwtTokenStore"
 		supportedGrantTypes="${oauth.supported.grant.types}"

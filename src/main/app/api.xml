@@ -10,7 +10,7 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
    
     <apikit:config name="api-config" raml="api.raml" consoleEnabled="false" doc:name="Router" />
   
-    <api-platform-gw:api apiName="${api.name}" version="${api.version}" flowRef="api-main" create="true" apikitRef="api-config" doc:name="API Autodiscovery"/>
+    <api-platform-gw:api apiName="${api.name}" version="${api.version}"  flowRef="api-main" create="true" apikitRef="api-config" doc:name="API Autodiscovery"/>
         
     <flow name="api-main">
         <http:listener config-ref="api-httpListenerConfig" path="/api/*" doc:name="HTTP" />
@@ -32,6 +32,9 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
     <flow name="get:/userinfo:api-config">
         <logger level="INFO" doc:name="Retrieves user details"/>
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+    </flow>
+    <flow name="get:/jwks.json:api-config">
+        <parse-template location="jwks-public.json" doc:name="JWK Set"/>
     </flow>
     
     <flow name="get:/openid-configuration:api-config">

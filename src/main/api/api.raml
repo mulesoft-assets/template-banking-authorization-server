@@ -133,4 +133,11 @@ types:
 
 /.well-known/openid-configuration:
 
-
+/jwks.json:
+  description: Contains JWK Set with public keys to validate the issuer.
+  get:
+    responses:
+      200:
+        body: 
+          application/json:
+            

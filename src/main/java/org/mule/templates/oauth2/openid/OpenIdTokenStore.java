@@ -38,9 +38,7 @@ public class OpenIdTokenStore implements TokenStore{
 	// passed by parameter
 	private String issuer;
 	private String publicKeysUrl;
-
-	// TODO Move to parameters / properties
-	private static final String ENCRYPTION_KEY_PATH = "shared-key.jwk";
+	private String encryptionKeyPath;
 
 	
 	@Override
@@ -62,7 +60,7 @@ public class OpenIdTokenStore implements TokenStore{
 		// JWE key
 		String encryptionKeyJWKString;
 		try {
-			encryptionKeyJWKString = loadResource(ENCRYPTION_KEY_PATH);
+			encryptionKeyJWKString = loadResource(encryptionKeyPath);
 		} catch (IOException e) {
 			throw new RuntimeException("Encryption key not found");
 		}
@@ -113,6 +111,14 @@ public class OpenIdTokenStore implements TokenStore{
 	public void store(AccessTokenStoreHolder arg0) {
 		// Not implemented since JWT tokens are not stored.
 		// Necessary for supporting revoking tokens.
+	}
+	
+	
+	/**
+	 * @param setEncryptionKey the JWT encryption key path 
+	 */
+	public void setEncryptionKeyPath(String encryptionKeyPath) {
+		this.encryptionKeyPath = encryptionKeyPath;
 	}
 	
 	/**
