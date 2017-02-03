@@ -45,7 +45,12 @@ public abstract class AbstractCustomHttpService implements MuleContextAware {
 		LOGGER.info("Request info sent to the http service");
 
 		try {
-			MuleMessage request = new DefaultMuleMessage("", muleContext);
+			HashMap<String,String> credentials = new HashMap<String,String>();
+			credentials.put("username", params[0]);
+			credentials.put("password", params[1]);
+			
+			MuleMessage request = new DefaultMuleMessage(credentials, muleContext);
+			
 			MuleMessage response = muleContext.getClient().send(getUrlString(params), request, getMethod());			
 			responseMap = mapper.readValue(response.getPayloadAsBytes(), new TypeReference<Map<String,String>>(){});
 			
