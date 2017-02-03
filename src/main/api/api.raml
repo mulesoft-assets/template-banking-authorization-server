@@ -2,71 +2,71 @@
 title: banking-authorization-server
 version: 1.0
 protocols: [HTTPS]
-baseUri: https://financialservices-as.cloudhub.io/api/{version}/oauth2
+baseUri: https://localhost:8082/api
 
 types:
-      
-  tokenInfo: 
+
+  tokenInfo:
     type: object
     properties:
       id_token?:
         type: string
         description: ID token as JWT.
-      access_token: 
+      access_token:
         type: string
         description: Access token to be used when making API calls
-      token_type: 
+      token_type:
         type: string
         enum: [bearer]
         description: Type of token
-      refresh_token?: 
+      refresh_token?:
         type: string
         description: Can be used to obtain new access_token after it expires.
-      expires_in?: 
+      expires_in?:
         type: integer
         description: Time to live in seconds
-      scope?: 
+      scope?:
         type: string
         description: Allowed scopes (space separated)
-      
+
 
 /authorize:
   description: |
     This endpoint will redirect to the provided URI after the user authentication passes. The redirect will contain authorization code that can then be used (for limited time) to obtain the access-token.
   get:
     queryParameters:
-      response_type: 
+      response_type:
         required: true
         enum: [code]
-      client_id: 
+      client_id:
         required: true
         description: Client ID of the registered App.
       redirect_uri:
         required: false
-        description: Redirect URI defined with your registered App. If not selected, the registered one will be used. 
+        description: Redirect URI defined with your registered App. If not selected, the registered one will be used.
       scope:
         required: false
         description: Scope of the Access Token requested. Space separated list.
       state:
         required: false
-        description: | 
+        description: |
           Any client state that needs to be passed on to the client request URI.
     responses:
       302:
         description: Will redirect to the redirect URI appending authorization code and possible state.
       401:
         description: Unauthorized
-        
-        
+
+
 
 /token:
   description: |
     This endpoint will return access token given that the request contains valid client_id, client_secret and authorization_code.
-  post: 
+  post:
     body:
       application/x-www-form-urlencoded:
         properties:
-          code: 
+          code:
             required: true
             description: The authorization code received by the authorization server
           grant_type:
@@ -79,7 +79,7 @@ types:
           client_secret:
             required: true
             description: The client application's client secret
-                
+
 
     responses:
       200:
@@ -91,11 +91,11 @@ types:
                 "access_token": "AYjcyMzY3ZDhiNmJkNTY",
                 "token_type": "bearer"
               }
-        
+
 /validate:
-  get: 
+  get:
     queryParameters:
-      access_token: 
+      access_token:
         required: true
         description: The access token
     responses:
@@ -113,15 +113,15 @@ types:
   description: |
     This endpoint will redirect to the provided URI after the user authentication passes. The redirect will contain authorization code that can then be used (for limited time) to obtain the access-token.
   get:
-    headers: 
+    headers:
       Authorization:
         type: string
         description: The access token.
         example: Bearer AStasataslkad34asdioj
     responses:
       200:
-        body: 
-          application/json: 
+        body:
+          application/json:
             example: |
               {
                 "sub"                     : "John Doe",
@@ -132,12 +132,17 @@ types:
               }
 
 /.well-known/openid-configuration:
+  description: Contains OpenID provider metadata.
+  get:
+    responses:
+      200:
+        body:
+          application/json:
 
 /jwks.json:
   description: Contains JWK Set with public keys to validate the issuer.
   get:
     responses:
       200:
-        body: 
+        body:
           application/json:
-            

@@ -18,14 +18,14 @@ public class ExternalIdHttpAuthService extends AbstractCustomHttpService{
 	 * @see org.mule.templates.oauth2.AbstractCustomHttpService#getUrlString(java.lang.String[])
 	 */
 	public String getUrlString(String...params){
-		return String.format("%s:%s%s?username=%s&password=%s", getHttpHost(), 
-				getHttpPort(), getHttpPath(), params[0], params[1]);
+		return String.format("%s:%s%s", getHttpHost(), 
+				getHttpPort(), getHttpPath());
 	}
 	
 	/**
 	 * @see org.mule.templates.oauth2.AbstractCustomHttpService#getMethod()
 	 */
 	public OperationOptions getMethod(){
-		return HttpRequestOptionsBuilder.newOptions().method(HttpConstants.Methods.GET.name()).build();
+		return HttpRequestOptionsBuilder.newOptions().method(HttpConstants.Methods.POST.name()).build();
 	}
 }

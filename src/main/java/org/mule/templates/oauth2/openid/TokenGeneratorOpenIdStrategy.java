@@ -142,7 +142,7 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 		
 		// TODO Pass variable claims
 	    claims.setIssuer(issuer);  
-	    claims.setExpirationTimeMinutesInTheFuture(ttlSeconds * 60); 
+	    claims.setExpirationTimeMinutesInTheFuture(ttlSeconds / 60); 
 //	    claims.setGeneratedJwtId(); 
 	    claims.setIssuedAtToNow();
 	    claims.setSubject(user.getUsername()); 
@@ -176,7 +176,7 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 
 		return jwe.getCompactSerialization();
 	}
-
+	
 	private String loadResource(String resourceName) throws IOException { 
 		InputStream inputStream = this.getClass().getResourceAsStream( resourceName);
 		Scanner scanner = new Scanner( inputStream, "UTF-8");
