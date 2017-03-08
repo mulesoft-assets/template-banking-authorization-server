@@ -145,7 +145,7 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy{
 	    claims.setExpirationTimeMinutesInTheFuture(ttlSeconds / 60); 
 //	    claims.setGeneratedJwtId(); 
 	    claims.setIssuedAtToNow();
-	    claims.setSubject(user.getUsername()); 
+	    claims.setSubject(user.getCustomProperties().get("id")); 
 	    claims.setClaim("ssn", user.getCustomProperties().get("ssn"));
 	    
 	    return claims;

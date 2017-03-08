@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider" xmlns:api-platform-gw="http://www.mulesoft.org/schema/mule/api-platform-gw"
-	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/api-platform-gw http://www.mulesoft.org/schema/mule/api-platform-gw/current/mule-api-platform-gw.xsd
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider" xmlns:api-platform-gw="http://www.mulesoft.org/schema/mule/api-platform-gw"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/api-platform-gw http://www.mulesoft.org/schema/mule/api-platform-gw/current/mule-api-platform-gw.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
@@ -12,6 +14,7 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
     <apikit:config name="api-config" raml="api.raml" consoleEnabled="false" doc:name="Router" />
   
     <api-platform-gw:api apiName="${api.name}" version="${api.version}" flowRef="api-main" create="true" apikitRef="api-config" doc:name="API Autodiscovery"/>
+    <http:request-config name="identity-service" protocol="HTTPS" host="#[new URL('${http.external.service.baseUrl}').getHost()]" port="#[new URL('${http.external.service.baseUrl}').getPort()]" basePath="#[new URL('${http.external.service.baseUrl}').getPath()]" doc:name="HTTP Request Configuration"/>
         
     <flow name="api-main">
         <http:listener config-ref="api-httpListenerConfig" path="/api/*" doc:name="HTTP" />
@@ -32,7 +35,13 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
     
     <flow name="get:/userinfo:api-config">
         <logger level="INFO" doc:name="Retrieves user details"/>
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+        <set-variable variableName="access_token" value="#[message.inboundProperties.authorization.substring(7)]" doc:name="set var access_token"/>
+        <flow-ref name="validateAccessToken" doc:name="validateAccessToken"/>
+        <http:request config-ref="identity-service" path="/users/{id}" method="GET" doc:name="GET user info">
+            <http:request-builder>
+                <http:uri-param paramName="id" value="#[flowVars.accessTokenClaims.sub]"/>
+            </http:request-builder>
+        </http:request>
     </flow>
     <flow name="get:/jwks.json:api-config">
         <parse-template location="${jwt.public.keys.path}" doc:name="JWK Set"/>
@@ -60,6 +69,48 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
   }]]></dw:set-payload>
         </dw:transform-message>
     </flow>
+    
+    <sub-flow name="validateAccessToken">
+        <enricher source="#[payload]" target="#[flowVars.decryptionKeyString]" doc:name="var decryptionKeyString">
+            <parse-template location="${jwt.encryption.key.path}" doc:name="load AES key"/>
+        </enricher>
+        <enricher source="#[payload]" target="#[flowVars.verificationKeyString]" doc:name="var verificationKeyString">
+            <parse-template location="${jwt.signing.key.path}" doc:name="load RSA key"/>
+        </enricher>
+        <enricher source="#[payload]" target="#[flowVars.accessTokenClaims]" doc:name="var accessTokenClaims">
+            <scripting:transformer returnClass="java.util.Map" doc:name="Validate access_token">
+                <scripting:script engine="Groovy"><![CDATA[import org.jose4j.jwt.JwtClaims;
+import org.jose4j.keys.HmacKey;
+import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver;
+import org.jose4j.jwk.HttpsJwks;
+import org.jose4j.jwk.RsaJsonWebKey;
+import org.jose4j.jwk.JsonWebKey;
+import org.jose4j.jwk.OctetSequenceJsonWebKey;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import org.jose4j.jwa.AlgorithmConstraints;
+import org.jose4j.jwa.AlgorithmConstraints.ConstraintType;
+import java.security.Key;
+
+decryptionKey = (OctetSequenceJsonWebKey) JsonWebKey.Factory.newJwk(flowVars.decryptionKeyString);
+
+verificationKey = (RsaJsonWebKey) JsonWebKey.Factory.newJwk(flowVars.verificationKeyString);
+    
+JwtConsumer jwtConsumer = new JwtConsumerBuilder()
+				.setRequireExpirationTime()
+				.setJwsAlgorithmConstraints(new AlgorithmConstraints(ConstraintType.WHITELIST, "RS256"))
+				.setJweAlgorithmConstraints(new AlgorithmConstraints(ConstraintType.WHITELIST, "dir"))
+				.setMaxFutureValidityInMinutes(30*24*60)
+				.setExpectedIssuer('${jwt.issuer}')
+				.setVerificationKey(verificationKey.getRsaPublicKey())
+				.setDecryptionKey(decryptionKey.getKey())
+				.build();
+		
+JwtClaims jwtClaims = jwtConsumer.processToClaims(flowVars.access_token);
+return jwtClaims.getClaimsMap();]]></scripting:script>
+            </scripting:transformer>
+        </enricher>
+    </sub-flow>
     
     <apikit:mapping-exception-strategy name="api-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
