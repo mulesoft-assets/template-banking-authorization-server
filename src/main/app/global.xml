@@ -34,5 +34,10 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
 	<tls:context name="tls.context.external.service" doc:name="TLS Context">
         <tls:trust-store path="${key.store.path}" password="${key.store.password}" type="jks" insecure="true"/>
     </tls:context>
+    
+    <http:request-config name="identity-service" protocol="HTTPS" doc:name="HTTP Request Configuration"
+	    host="#[new URL('${http.external.service.baseUrl}').getHost()]" 
+	    port="#[new URL('${http.external.service.baseUrl}').getPort()]" 
+	    basePath="#[new URL('${http.external.service.baseUrl}').getPath()]" />
 	
 </mule>

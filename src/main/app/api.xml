@@ -14,7 +14,6 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
     <apikit:config name="api-config" raml="api.raml" consoleEnabled="false" doc:name="Router" />
   
     <api-platform-gw:api apiName="${api.name}" version="${api.version}" flowRef="api-main" create="true" apikitRef="api-config" doc:name="API Autodiscovery"/>
-    <http:request-config name="identity-service" protocol="HTTPS" host="#[new URL('${http.external.service.baseUrl}').getHost()]" port="#[new URL('${http.external.service.baseUrl}').getPort()]" basePath="#[new URL('${http.external.service.baseUrl}').getPath()]" doc:name="HTTP Request Configuration"/>
         
     <flow name="api-main">
         <http:listener config-ref="api-httpListenerConfig" path="/api/*" doc:name="HTTP" />
@@ -42,6 +41,7 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
                 <http:uri-param paramName="id" value="#[flowVars.accessTokenClaims.sub]"/>
             </http:request-builder>
         </http:request>
+        <set-property propertyName="Content-Type" value="application/json" encoding="UTF-8" doc:name="MIME type"/>
     </flow>
     <flow name="get:/jwks.json:api-config">
         <parse-template location="${jwt.public.keys.path}" doc:name="JWK Set"/>
