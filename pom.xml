@@ -106,13 +106,13 @@
 		<dependency>
 			<groupId>com.mulesoft.anypoint</groupId>
 			<artifactId>mule-module-cors-gw</artifactId>
-			<version>3.8.3</version>
+			<version>${mule.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.mulesoft.security</groupId>
 			<artifactId>mule-module-security-oauth2-provider</artifactId>
-			<version>1.6.3-SNAPSHOT</version>
+			<version>1.6.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bitbucket.b_c</groupId>
