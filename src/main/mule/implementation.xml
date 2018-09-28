@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+    xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:oauth="http://www.mulesoft.org/schema/mule/oauth"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider"
+    xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/oauth http://www.mulesoft.org/schema/mule/oauth/current/mule-oauth.xsd
+http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+    <sub-flow name="validateSubFlow" doc:id="1d15046c-e1bc-4aa4-9e62-b19af5a31f24">
+        <logger level="INFO" doc:name="Validates the token. APIs call this to verify that token is authentic" doc:id="0b6c2498-a98c-4434-90bb-c46d6f4f653c" />
+        <ee:transform doc:name="Set Payload" doc:id="3a8887e9-a02c-45c3-865f-9758e086ced0">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+null]]></ee:set-payload>
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="accessToken"><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams['access_token']]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <try doc:name="Try" doc:id="c6a39683-23d5-4a10-8ffa-873a5458925d">
+            <oauth2-provider:validate-token config-ref="Oauth2_Provider_Config" accessToken="#[vars.accessToken]" />
+            <os:retrieve doc:name="Retrieve accessToken" doc:id="e74cb5c8-d889-4ae2-8a51-a44fb233789c" key="#[vars.accessToken]"
+                objectStore="tokenObjectStore" target="accessToken" targetValue="#[payload.accessToken]" />
+            <ee:transform doc:name="Set response" doc:id="449416ff-480f-4974-946a-2b1a44c5b9c4">
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	access_token: vars.accessToken.accessToken,
+	token_type: vars.accessToken["type"],
+	expires_in: payload.expires_in,
+	scope: payload.scope
+}]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+            <error-handler>
+                <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue"
+                    doc:id="20e14818-ac9d-4909-99e5-2ff8da609b67" type="OAUTH2-PROVIDER:TOKEN_UNAUTHORIZED">
+                    <ee:transform doc:name="Transform Message" doc:id="6fec53d4-f0f4-4525-9ce1-d3a75fe2ebc3">
+                        <ee:message>
+                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"error" : "Invalid token"
+}]]></ee:set-payload>
+                        </ee:message>
+                        <ee:variables>
+                            <ee:set-variable variableName="httpStatus"><![CDATA[%dw 2.0
+output application/java
+---
+401]]></ee:set-variable>
+                        </ee:variables>
+                    </ee:transform>
+                </on-error-continue>
+            </error-handler>
+        </try>
+    </sub-flow>
+    <sub-flow name="userinfoSubFlow" doc:id="56898e82-eb68-43e5-ab8c-8501d4fee81d">
+        <logger level="INFO" doc:name="Retrieves user details" doc:id="ef7eb673-1377-46e0-ab4b-bf08ee0e4b82" />
+        <set-variable value="#[attributes.headers.authorization[7 to -1]]" doc:name="Set var accessToken" doc:id="b11bdd15-15a0-49a5-9a1a-8d37a296cd50"
+            variableName="accessToken" />
+        <flow-ref doc:name="validateAccessToken" doc:id="33ccd7c9-7e87-408b-9bcc-db5ea392280d" name="validateAccessTokenSubFlow" />
+        <http:request method="GET" doc:name="GET user info" doc:id="6542c4f9-8366-449a-b497-f856dff28c25" config-ref="HTTP_Request_configuration"
+            path="/users/{id}" outputMimeType="application/json" outputEncoding="UTF-8">
+            <http:uri-params><![CDATA[#[output applicaton/java
+---
+{
+	"id" : vars.accessTokenClaims.sub
+}]]]></http:uri-params>
+        </http:request>
+    </sub-flow>
+    <sub-flow name="validateAccessTokenSubFlow" doc:id="386084a2-f7d6-4b31-98fd-856c6664422a">
+        <file:read doc:name="Load AES key" doc:id="342027d2-628b-4e9d-9989-bb08aecd864c" config-ref="File_Config" path="${jwt.encryption.key.path}"
+            target="decryptionKeyString" />
+        <file:read doc:name="Load RSA key" doc:id="cbecd61a-d5b4-443b-b3a0-5f31c84f8654" config-ref="File_Config" path="${jwt.signing.key.path}"
+            target="verificationKeyString" />
+        <java:invoke-static doc:name="Get JWT Claims" doc:id="c51ea36c-54b7-45c2-814b-988355d56456" class="org.mule.templates.oauth2.AccessTokenUtils"
+            method="getJwtClaims(String,String,String,String)" target="accessTokenClaims">
+            <java:args><![CDATA[#[{arg0:vars.accessToken, arg1:vars.decryptionKeyString, arg2:vars.verificationKeyString,
+                arg3:p('jwt.issuer')}]]]></java:args>
+        </java:invoke-static>
+    </sub-flow>
+    <sub-flow name="openidConfigurationSubFlow" doc:id="9cbd07fd-f7a9-4094-80cd-b881f57598e4">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+            xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd"
+            doc:id="744c9c60-d68a-4388-9a6d-bd4baf4391ec" doc:name="Set response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"issuer": p('jwt.issuer'),
+	"authorization_endpoint": "https://" ++ server.host! ++ "/" ++ p('oauth.authorization.endpoint.path'),
+	"token_endpoint": "https://" ++ server.host! ++ "/" ++ p('oauth.access.token.endpoint.path'),
+	"token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
+	"jwks_uri": "https://server.example.com/jwks.json",
+	"scopes_supported": p('oauth.scopes') splitBy " " default [],
+	"response_types_supported": ["code", "token"],
+	"subject_types_supported": ["public", "pairwise"],
+	"id_token_signing_alg_values_supported": [ p('jwt.signing.algorithm')],
+	"id_token_encryption_alg_values_supported": ["DIR"],
+	"id_token_encryption_enc_values_supported": [p('jwt.encryption.algorithm')],
+	"ui_locales_supported": ["en-US"]
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </sub-flow>
+    <sub-flow name="jwksJsonSubFlow" doc:id="3845b88f-b60c-44b2-b193-88b863e3c056">
+        <file:read doc:name="JWK Set" doc:id="2309983f-6c7b-4d37-aeac-e0d8260a1f1f" config-ref="File_Config" path="${jwt.public.keys.path}" />
+    </sub-flow>
+</mule>

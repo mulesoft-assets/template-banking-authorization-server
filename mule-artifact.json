@@ -1,0 +1,21 @@
+{
+	"classLoaderModelLoaderDescriptor": {
+		"attributes": {
+			"exportedPackages": [
+				"org.mule.templates.oauth2",
+				"org.mule.templates.oauth2.openid"
+			],
+			"exportedResources": [
+				"beans.xml",
+				"api\\examples\\token_response.json",
+				"api\\examples\\validate_response.json",
+				"api\\examples\\userinfo_response.json",
+				"api\\examples\\openid-configuration_response.json",
+				"api\\examples\\jwks.json_response.json",
+				"api\\banking_authorization_server.raml"
+			]
+		},
+		"id": "mule"
+	},
+	"minMuleVersion": "4.1.3"
+}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ss="http://www.springframework.org/schema/security"
+    xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <ss:authentication-manager id="clientAuthenticationManager" />
+
+    <ss:authentication-manager id="resourceOwnerAuthenticationManager">
+        <ss:authentication-provider ref="externalIdResourceOwnerAuthProvider" />
+    </ss:authentication-manager>
+
+    <bean class="org.mule.templates.oauth2.ExternalIdResourceOwnerAuthProvider" id="externalIdResourceOwnerAuthProvider">
+        <property name="externalIdHttpAuthService" ref="externalIdHttpAuthService" />
+    </bean>
+
+    <bean class="org.mule.templates.oauth2.ExternalIdHttpAuthService" id="externalIdHttpAuthService">
+        <property name="authorizationUrl" value="${http.external.service.auth}" />
+    </bean>
+
+    <bean name="tokenGeneratorOpenIdStrategy" class="org.mule.templates.oauth2.openid.TokenGeneratorOpenIdStrategy">
+        <property name="issuer" value="${jwt.issuer}" />
+        <property name="signingKeyPath" value="${jwt.signing.key.path}" />
+        <property name="encryptionKeyPath" value="${jwt.encryption.key.path}" />
+        <property name="ttlSeconds" value="${oauth.token.ttl}" />
+        <property name="signingAlgorithm" value="${jwt.signing.algorithm}" />
+        <property name="encryptionAlgorithm" value="${jwt.encryption.algorithm}" />
+    </bean>
+
+</beans>
