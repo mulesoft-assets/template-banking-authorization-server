@@ -148,10 +148,8 @@ public class TokenGeneratorOpenIdStrategy implements TokenGeneratorStrategy {
 	private JwtClaims buildJWTClaims(ExternalIdServiceUser user) {
 		JwtClaims claims = new JwtClaims();
 
-		// TODO Pass variable claims
 		claims.setIssuer(issuer);
 		claims.setExpirationTimeMinutesInTheFuture(ttlSeconds / 60);
-		// claims.setGeneratedJwtId();
 		claims.setIssuedAtToNow();
 		claims.setSubject(user.getCustomProperties().get("id"));
 		claims.setClaim("ssn", user.getCustomProperties().get("ssn"));

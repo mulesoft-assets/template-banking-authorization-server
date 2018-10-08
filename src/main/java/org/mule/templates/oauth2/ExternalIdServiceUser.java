@@ -19,9 +19,6 @@ public class ExternalIdServiceUser extends User {
 
 	private Map<String, String> customProperties;
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -6043819622584678780L;
 
 	/**
