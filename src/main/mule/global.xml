@@ -72,16 +72,5 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
         <oauth2-provider:authorization-config loginPage="${login.page.path}" path="${oauth.authorization.endpoint.path}"
             authorizationCodeStore="authorizationCodeObjectStore" />
 
-        <oauth2-provider:clients>
-            <oauth2-provider:client clientId="${anypoint.platform.client_id}" secret="${anypoint.platform.client_secret}"
-                type="CONFIDENTIAL" clientName="${anypoint.platform.client_name}">
-                <oauth2-provider:client-redirect-uris>
-                    <oauth2-provider:client-redirect-uri value="${oauth.redirect_uri}" />
-                </oauth2-provider:client-redirect-uris>
-                <oauth2-provider:client-authorized-grant-types>
-                    <oauth2-provider:client-authorized-grant-type value="AUTHORIZATION_CODE" />
-                </oauth2-provider:client-authorized-grant-types>
-            </oauth2-provider:client>
-        </oauth2-provider:clients>
     </oauth2-provider:config>
 </mule>

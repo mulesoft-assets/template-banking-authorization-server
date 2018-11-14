@@ -12,6 +12,8 @@
 				"api\\examples\\userinfo_response.json",
 				"api\\examples\\openid-configuration_response.json",
 				"api\\examples\\jwks.json_response.json",
+				"api\\examples\\register_client_response.json",
+				"api\\examples\\register_client_error.json",
 				"api\\banking_authorization_server.raml"
 			]
 		},

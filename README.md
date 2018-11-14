@@ -97,9 +97,6 @@ Detailed list with examples:
 + https.port `8082`
 
 **API Properties**
-+ anypoint.platform.client_id `112ac8s8f02dff0286234bbca11256`
-+ anypoint.platform.client_secret `FF1812BC1951A48FC12378DA12CC75 `
-+ anypoint.platform.client_name `Client name`
 + api.name `bank-auth-server`
 + api.version `2.0`
 
@@ -135,7 +132,8 @@ Detailed list with examples:
 + oauth.token.ttl `36000`
 + oauth.scopes ` `
 + oauth.supported.grant.types `AUTHORIZATION_CODE,IMPLICIT`
-+ oauth.authorization.endpoint.path `api/authorize`
-+ oauth.access.token.endpoint.path `api/token`
++ oauth.authorization.endpoint.path `/api/authorize`
++ oauth.access.token.endpoint.path `/api/token`
++ oauth.registration.endpoint.path `/api/clients`
 + oauth.enable.token.refresh `false`
 + login.page.path `html/login.html`

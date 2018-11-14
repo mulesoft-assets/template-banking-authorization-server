@@ -137,3 +137,32 @@ types:
         body: 
           application/json:
             example: !include ./examples/jwks.json_response.json
+
+/clients:
+  description: Register client in authorization server.
+  post:
+    body:
+      application/json:
+        properties:
+          client_id:
+            required: true
+            description: The client application's id
+          client_secret:
+            required: true
+            description: The client application's client secret
+          client_name:
+            required: false
+            description: The client application's client name
+          redirect_uris:
+            required: true
+            description: List of redirect URIs
+            type: string[]
+    responses:
+      201:
+        body:
+          application/json:
+            example: !include ./examples/register_client_response.json
+      409:
+        body:
+          application/json:
+            example: !include ./examples/register_client_error.json

@@ -47,8 +47,8 @@ output application/json
                 </ee:message>
             </ee:transform>
             <error-handler>
-                <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue"
-                    doc:id="20e14818-ac9d-4909-99e5-2ff8da609b67" type="OAUTH2-PROVIDER:TOKEN_UNAUTHORIZED">
+                <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="20e14818-ac9d-4909-99e5-2ff8da609b67"
+                    type="OAUTH2-PROVIDER:TOKEN_UNAUTHORIZED">
                     <ee:transform doc:name="Transform Message" doc:id="6fec53d4-f0f4-4525-9ce1-d3a75fe2ebc3">
                         <ee:message>
                             <ee:set-payload><![CDATA[%dw 2.0
@@ -96,18 +96,19 @@ output application/java
     </sub-flow>
     <sub-flow name="openidConfigurationSubFlow" doc:id="9cbd07fd-f7a9-4094-80cd-b881f57598e4">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-            xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd"
-            doc:id="744c9c60-d68a-4388-9a6d-bd4baf4391ec" doc:name="Set response">
+            xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="744c9c60-d68a-4388-9a6d-bd4baf4391ec"
+            doc:name="Set response">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
 	"issuer": p('jwt.issuer'),
-	"authorization_endpoint": "https://" ++ server.host! ++ "/" ++ p('oauth.authorization.endpoint.path'),
-	"token_endpoint": "https://" ++ server.host! ++ "/" ++ p('oauth.access.token.endpoint.path'),
+	"authorization_endpoint": "https://" ++ server.host! ++ p('oauth.authorization.endpoint.path'),
+	"token_endpoint": "https://" ++ server.host! ++ p('oauth.access.token.endpoint.path'),
 	"token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
 	"jwks_uri": "https://server.example.com/jwks.json",
+    "registration_endpoint": "https://" ++ server.host! ++ p('oauth.registration.endpoint.path'),
 	"scopes_supported": p('oauth.scopes') splitBy " " default [],
 	"response_types_supported": ["code", "token"],
 	"subject_types_supported": ["public", "pairwise"],
@@ -121,5 +122,41 @@ output application/json
     </sub-flow>
     <sub-flow name="jwksJsonSubFlow" doc:id="3845b88f-b60c-44b2-b193-88b863e3c056">
         <file:read doc:name="JWK Set" doc:id="2309983f-6c7b-4d37-aeac-e0d8260a1f1f" config-ref="File_Config" path="${jwt.public.keys.path}" />
+    </sub-flow>
+    <sub-flow name="addClientSubFlow" doc:id="b4229054-353c-435d-92ee-e62324fa0b56">
+        <try doc:name="Try" doc:id="bc21a625-febf-4941-bc4d-c4b4dfcb5605">
+            <oauth2-provider:create-client doc:name="Create client" doc:id="77361503-baef-4566-814a-ef100b89ea7d"
+                config-ref="Oauth2_Provider_Config" clientId="#[payload.client_id]" type="CONFIDENTIAL" secret="#[payload.client_secret]" clientName="#[payload.client_name]"
+                redirectUris="#[payload.redirect_uris]" authorizedGrantTypes='#[["AUTHORIZATION_CODE"]]' failIfPresent="true" />
+            <ee:transform doc:name="Set response" doc:id="e0bd2931-414b-4059-a795-4d6fe2dab6b2">
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"client_id": payload.client_id,
+	"client_secret_expires_at": 0
+}]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+            <error-handler>
+                <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="33f96ed7-84a0-4121-b507-6b9b92c4366e"
+                    type="OAUTH2-PROVIDER:CLIENT_ALREADY_EXISTS">
+                    <ee:transform doc:name="Set error response" doc:id="d8e5595c-fb00-4032-be30-7aa7d0729401">
+                        <ee:message>
+                            <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"error": "Client already exists."
+}]]></ee:set-payload>
+                        </ee:message>
+                        <ee:variables>
+                            <ee:set-variable variableName="httpStatus"><![CDATA[409]]></ee:set-variable>
+                        </ee:variables>
+                    </ee:transform>
+                </on-error-continue>
+            </error-handler>
+        </try>
     </sub-flow>
 </mule>
