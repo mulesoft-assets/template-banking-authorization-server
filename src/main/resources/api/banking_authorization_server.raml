@@ -103,8 +103,7 @@ types:
               example: !include ./examples/validate_response.json
 
 /userinfo:
-  description: |
-    Get user info.
+  description: Get user info.
   get:
     displayName: Get user info
     headers: 
@@ -139,7 +138,9 @@ types:
             example: !include ./examples/jwks.json_response.json
             
 /introspect:
+  description: Returns metadata about an access token, including expiration and token active state.
   post:
+    displayName: Introspect
     body:
       application/x-www-form-urlencoded:
         properties:
@@ -164,11 +165,13 @@ types:
             example: !include ./examples/introspect_error_response.json
 
 /register:
+  description: Register client in authorization server.
   post:
+    displayName: Register client
     headers: 
       Authorization:
         type: string
-        description: The access token.
+        description: The access token
         example: Bearer AStasataslkad34asdioj
     body:
       application/json:
