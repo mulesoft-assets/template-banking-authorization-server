@@ -123,40 +123,84 @@ output application/json
     <sub-flow name="jwksJsonSubFlow" doc:id="3845b88f-b60c-44b2-b193-88b863e3c056">
         <file:read doc:name="JWK Set" doc:id="2309983f-6c7b-4d37-aeac-e0d8260a1f1f" config-ref="File_Config" path="${jwt.public.keys.path}" />
     </sub-flow>
-    <sub-flow name="addClientSubFlow" doc:id="b4229054-353c-435d-92ee-e62324fa0b56">
-        <try doc:name="Try" doc:id="bc21a625-febf-4941-bc4d-c4b4dfcb5605">
-            <oauth2-provider:create-client doc:name="Create client" doc:id="77361503-baef-4566-814a-ef100b89ea7d"
-                config-ref="Oauth2_Provider_Config" clientId="#[payload.client_id]" type="CONFIDENTIAL" secret="#[payload.client_secret]" clientName="#[payload.client_name]"
-                redirectUris="#[payload.redirect_uris]" authorizedGrantTypes='#[["AUTHORIZATION_CODE"]]' failIfPresent="true" />
-            <ee:transform doc:name="Set response" doc:id="e0bd2931-414b-4059-a795-4d6fe2dab6b2">
+    <sub-flow name="introspectSubFlow" doc:id="5f7670f5-6379-4e3f-843a-6dcea0b819d9">
+        <try doc:name="Try" doc:id="fcdab01b-5404-4bc4-b843-4b29de692de2">
+            <oauth2-provider:validate-token doc:name="Validate token" doc:id="0fe45584-4e65-4c26-ad29-21c2e26f1909"
+                config-ref="Oauth2_Provider_Config" accessToken="#[payload.token]" target="validateInfo" />
+            <ee:transform doc:name="Set response" doc:id="56e04c19-d9a4-456e-bb3c-c87b74dc3f27">
                 <ee:message>
                     <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-{
-	"client_id": payload.client_id,
-	"client_secret_expires_at": 0
-}]]></ee:set-payload>
+if(vars.validateInfo.expires_in > 0)
+    {
+        "active": true,
+        "exp": vars.validateInfo.expires_in
+    }
+else
+    {
+        "active": false
+    }]]></ee:set-payload>
                 </ee:message>
             </ee:transform>
             <error-handler>
-                <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="33f96ed7-84a0-4121-b507-6b9b92c4366e"
-                    type="OAUTH2-PROVIDER:CLIENT_ALREADY_EXISTS">
-                    <ee:transform doc:name="Set error response" doc:id="d8e5595c-fb00-4032-be30-7aa7d0729401">
+                <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e22186a6-8020-4a1c-a305-9baf399bec37"
+                    type="OAUTH2-PROVIDER:TOKEN_UNAUTHORIZED">
+                    <ee:transform doc:name="Set response" doc:id="e98db102-59d5-41d8-9ecd-cbf2107c1a2d">
                         <ee:message>
                             <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-	"error": "Client already exists."
+    "error": "invalid_token",
+    "error_description": "Invalid token"
 }]]></ee:set-payload>
                         </ee:message>
                         <ee:variables>
-                            <ee:set-variable variableName="httpStatus"><![CDATA[409]]></ee:set-variable>
+                            <ee:set-variable variableName="httpStatus"><![CDATA[401]]></ee:set-variable>
                         </ee:variables>
                     </ee:transform>
                 </on-error-continue>
             </error-handler>
         </try>
+    </sub-flow>
+
+    <sub-flow name="registerSubFlow" doc:id="168eb49d-ec72-4beb-ac46-7ca036886f48">
+         <set-variable value="#[attributes.headers.authorization[7 to -1]]" doc:name="Set var accessToken" doc:id="dc1e1188-3d61-4926-8e9f-47c6244f5a93"
+            variableName="accessToken" />
+        <flow-ref doc:name="validateAccessToken" doc:id="128d4f36-14b6-472c-bb4e-9e299b1e9090" name="validateAccessTokenSubFlow" />
+        <ee:transform doc:name="Save input" doc:id="93444e2d-adcd-476f-9e8e-1d70022da483">
+            <ee:message>
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="clientData"><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <java:invoke-static doc:name="Generate clientId" doc:id="f7878127-b4c8-4b37-b2f9-58ed0b457f2a" class="org.mule.templates.oauth2.AccessTokenUtils"
+            method="getRandomBytes()" target="clientId" />
+        <java:invoke-static doc:name="Generate clientSecret" doc:id="cd856401-ad37-4617-9037-aa619355c5a5" class="org.mule.templates.oauth2.AccessTokenUtils"
+            method="getRandomBytes()" target="clientSecret" />
+        <oauth2-provider:create-client doc:name="Create client" doc:id="1d9bf74a-c15f-4a1b-8961-c9800ff25853"
+            config-ref="Oauth2_Provider_Config" clientId="#[vars.clientId]" type="CONFIDENTIAL" secret="#[vars.clientSecret]" clientName="#[vars.clientData.client_name]"
+            redirectUris="#[vars.clientData.redirect_uris]" authorizedGrantTypes='#[["AUTHORIZATION_CODE"]]' />
+        <logger level="INFO" doc:name="Logger" doc:id="d478597b-2fd2-4d05-bc63-84d1b63f4d8a" message="Registrated client with clientId: #[vars.clientId]"/>
+		<ee:transform doc:name="Set response" doc:id="10711a58-ed08-4fc6-90f0-69b2aa6a64d5">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "client_id": vars.clientId,
+    "client_secret": vars.clientSecret,
+    "client_secret_expires_at": 0
+}]]></ee:set-payload>
+            </ee:message>
+            <ee:variables>
+                <ee:set-variable variableName="httpStatus"><![CDATA[201]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
     </sub-flow>
 </mule>

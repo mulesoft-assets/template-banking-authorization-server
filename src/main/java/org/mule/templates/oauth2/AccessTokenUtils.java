@@ -15,7 +15,11 @@ import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.jose4j.jwa.AlgorithmConstraints;
 import org.jose4j.jwa.AlgorithmConstraints.ConstraintType;
+
+import java.security.SecureRandom;
 import java.util.Map;
+
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * Utility class for accessToken operations
@@ -51,5 +55,17 @@ public class AccessTokenUtils {
 			throw new RuntimeException("Error retrieving claims from token: " + e.getMessage());
 		}
 
+	}
+
+	/**
+	 * Generate random hex sequence
+	 * 
+	 * @return random hex sequence
+	 */
+	public static String getRandomBytes() {
+		SecureRandom random = new SecureRandom();
+		byte bytes[] = new byte[16];
+		random.nextBytes(bytes);
+		return DatatypeConverter.printHexBinary(bytes);
 	}
 }
