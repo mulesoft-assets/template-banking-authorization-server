@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:mule-ss="http://www.mulesoft.org/schema/mule/spring-security"
-    xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider"
-    xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
-    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:mule-ss="http://www.mulesoft.org/schema/mule/spring-security" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+    xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+    xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
 http://www.mulesoft.org/schema/mule/spring-security http://www.mulesoft.org/schema/mule/spring-security/current/mule-spring-security.xsd 
@@ -19,7 +19,7 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
     <configuration-properties file="common.properties" doc:name="Configuration properties" doc:id="dffa4da7-cc5c-4ecb-922e-1115b4387354" />
     <configuration-properties file="mule-artifact.properties" doc:name="Configuration properties" doc:id="d185e6c2-8ca4-4217-928b-a845563af693" />
     <global-property doc:name="Global Property" name="mule.env" value="dev" />
-
+    
     <http:listener-config name="banking_authorization_server-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="${https.port}" protocol="HTTPS" tlsContext="TLS_Context" />
     </http:listener-config>
@@ -53,7 +53,7 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
     <os:object-store name="clientObjectStore" persistent="true" />
     <os:object-store name="authorizationCodeObjectStore" entryTtl="600" entryTtlUnit="SECONDS" persistent="true" />
     <os:object-store name="tokenObjectStore" entryTtl="${oauth.token.ttl}" entryTtlUnit="SECONDS" persistent="true" />
-    
+
     <oauth2-provider:config name="Oauth2_Provider_Config" doc:name="Oauth2 Provider Config" doc:id="f05bdb1e-28c8-4e41-9c06-18f0f23ade8d"
         providerName="${oauth.provider.name}" listenerConfig="banking_authorization_server-httpListenerConfig" clientStore="clientObjectStore"
         resourceOwnerSecurityProvider="resourceOwnerSecurityProvider" clientSecurityProvider="clientSecurityProvider" scopes="${oauth.scopes}"
@@ -62,8 +62,7 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
             <oauth2-provider:period-rate-limiter />
         </oauth2-provider:client-validation-rate-limiter>
 
-        <oauth2-provider:token-config path="${oauth.access.token.endpoint.path}" tokenStore="tokenObjectStore"
-            tokenTtl="${oauth.token.ttl}">
+        <oauth2-provider:token-config path="${oauth.access.token.endpoint.path}" tokenStore="tokenObjectStore" tokenTtl="${oauth.token.ttl}">
             <oauth2-provider:refresh-token-strategy>
                 <oauth2-provider:multiple-refresh-tokens />
             </oauth2-provider:refresh-token-strategy>
@@ -72,5 +71,18 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
         <oauth2-provider:authorization-config loginPage="${login.page.path}" path="${oauth.authorization.endpoint.path}"
             authorizationCodeStore="authorizationCodeObjectStore" />
 
+        <oauth2-provider:clients>
+            <oauth2-provider:client clientId="${anypoint.platform.client_id}" secret="${anypoint.platform.client_secret}" type="CONFIDENTIAL"
+                clientName="${anypoint.platform.client_name}">
+                <oauth2-provider:client-redirect-uris>
+                    <oauth2-provider:client-redirect-uri value="${anypoint.platform.redirect_url}" />
+                </oauth2-provider:client-redirect-uris>
+                <oauth2-provider:client-authorized-grant-types>
+                    <oauth2-provider:client-authorized-grant-type value="AUTHORIZATION_CODE" />
+                </oauth2-provider:client-authorized-grant-types>
+            </oauth2-provider:client>
+        </oauth2-provider:clients>
+
     </oauth2-provider:config>
+
 </mule>

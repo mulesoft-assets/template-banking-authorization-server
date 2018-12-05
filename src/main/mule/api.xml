@@ -142,7 +142,10 @@ output application/json
     <flow name="get:\validate:banking_authorization_server-config">
         <flow-ref doc:name="Call validateSubFlow" doc:id="640540f9-a408-42ed-973f-fa368549495c" name="validateSubFlow" />
     </flow>
-    <flow name="post:\clients:application\json:banking_authorization_server-config">
-        <flow-ref doc:name="Flow Reference" doc:id="499d9e22-32ca-465b-a34f-1e597c643552" name="addClientSubFlow"/>
+    <flow name="post:\introspect:application\x-www-form-urlencoded:banking_authorization_server-config">
+        <flow-ref doc:name="Flow Reference" doc:id="7d7d05e2-12a5-4c99-bdd9-2333913a84c1" name="introspectSubFlow" />
+    </flow>
+    <flow name="post:\register:application\json:banking_authorization_server-config">
+        <flow-ref doc:name="Flow Reference" doc:id="07306910-d934-42c4-b396-69255030d8ed" name="registerSubFlow" />
     </flow>
 </mule>
