@@ -28,9 +28,27 @@ To make this Anypoint Template run, there are certain preconditions that must be
 
 ## APIs security considerations <a name="apissecurityconsiderations"/>
 
-This Experience API is meant to be deployed to CloudHub and managed using the API Platform Manager.
+This Authorization server is meant to be deployed to CloudHub.
 
-Only registered clients can have access tokens issued for them. In order to register the client application, the API must be defined in Anypoint Platform's API Manager.  API Autodiscovery configuration properties must be filled correctly to point to the defined API. Public portal created via API Manager can be used to register consuming applications, those will have client_id and client_secret generated. The Anypoint Platform client database will be used to construct the access tokens.
+Only registered clients can have access tokens issued for them. In order to register the client application, Authorization server should be integrated with the Anypoint platform.
+
+### How to integrate Authorization server with the Anypoint Platform
+Follow configuration of external client management [guide](https://docs.mulesoft.com/access-management/configure-client-management-openid-task).
+
+Dynamic Client Registration settings:
+
+| Property | Value |
+|---|---|
+| Client Registration URL | ${baseUrl}/register |
+| Authorization Header | Bearer ${api_token} |
+| Client ID | ${anypoint.platform.client_id} |
+| Client Secret | ${anypoint.platform.client_secret} |
+| Authorize URL | ${baseUrl}/authorize |
+| Token URL | ${baseUrl}/token |
+| Token Introspection URL | ${baseUrl}/introspect |
+
++ `${baseUrl}` is URL of deployed Authorization server
++ `${api_token}` is access token issued using `/authorize` and `/token` operations for initial `anypoint.platform.client`. This token is not everlasting and should be reissued once it expired and manually updated in this configuration.
 
 The project extends the [Mule OAuth 2.0 Service Provider](https://docs.mulesoft.com/api-manager/oauth-service-provider-reference) with custom token generation strategy.
 
@@ -96,9 +114,11 @@ Detailed list with examples:
 **HTTP Listener Config**
 + https.port `8082`
 
-**API Properties**
-+ api.name `bank-auth-server`
-+ api.version `2.0`
+**Anypoint Platform client**
++ anypoint.platform.client_id `b8c1b5678a1f2d6ba3a5123ed456cdb2`
++ anypoint.platform.client_secret `c9b2a1234b0a2a7cb1c1124cc141acc1`
++ anypoint.platform.client_name `Client name`
++ anypoint.platform.redirect_url `https://mybank.example.com/callback`
 
 **JWT Tokens**
 + jwt.issuer `https://mybank.example.com`
@@ -134,6 +154,6 @@ Detailed list with examples:
 + oauth.supported.grant.types `AUTHORIZATION_CODE,IMPLICIT`
 + oauth.authorization.endpoint.path `/api/authorize`
 + oauth.access.token.endpoint.path `/api/token`
-+ oauth.registration.endpoint.path `/api/clients`
++ oauth.registration.endpoint.path `/api/register`
 + oauth.enable.token.refresh `false`
 + login.page.path `html/login.html`
