@@ -105,7 +105,7 @@ types:
 /userinfo:
   description: Get user info.
   get:
-    displayName: Get user info
+    displayName: Retrieve user info
     headers: 
       Authorization:
         type: string
@@ -120,7 +120,7 @@ types:
 /.well-known/openid-configuration:
   description: Contains OpenID provider metadata.
   get:
-    displayName: OpenID provider metadata
+    displayName: Contains OpenID provider metadata
     responses:
       200:
         body:
@@ -130,17 +130,17 @@ types:
 /jwks.json:
   description: Contains JWK Set with public keys to validate the issuer.
   get:
-    displayName: JWK Set
+    displayName: Contains JWK set
     responses:
       200:
         body: 
           application/json:
             example: !include ./examples/jwks.json_response.json
-            
+
 /introspect:
   description: Returns metadata about an access token, including expiration and token active state.
   post:
-    displayName: Introspect
+    displayName: Retrieve access token metadata
     body:
       application/x-www-form-urlencoded:
         properties:
