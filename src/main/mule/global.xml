@@ -15,10 +15,10 @@ http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/sche
 http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
 
+	<global-property doc:name="Global Property" name="mule.env" value="dev" />
     <configuration-properties file="mule.${mule.env}.properties" doc:name="Configuration properties" doc:id="46877740-aac5-4812-8728-4718689aa9ec" />
     <configuration-properties file="common.properties" doc:name="Configuration properties" doc:id="dffa4da7-cc5c-4ecb-922e-1115b4387354" />
-    <configuration-properties file="mule-artifact.properties" doc:name="Configuration properties" doc:id="d185e6c2-8ca4-4217-928b-a845563af693" />
-    <global-property doc:name="Global Property" name="mule.env" value="dev" />
+
     
     <http:listener-config name="banking_authorization_server-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="${https.port}" protocol="HTTPS" tlsContext="TLS_Context" />

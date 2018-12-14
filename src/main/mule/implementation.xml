@@ -49,7 +49,7 @@ output application/json
             <error-handler>
                 <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="20e14818-ac9d-4909-99e5-2ff8da609b67"
                     type="OAUTH2-PROVIDER:TOKEN_UNAUTHORIZED">
-                    <ee:transform doc:name="Transform Message" doc:id="6fec53d4-f0f4-4525-9ce1-d3a75fe2ebc3">
+                    <ee:transform doc:name="Invalid token" doc:id="6fec53d4-f0f4-4525-9ce1-d3a75fe2ebc3">
                         <ee:message>
                             <ee:set-payload><![CDATA[%dw 2.0
 output application/json
