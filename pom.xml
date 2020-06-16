@@ -11,7 +11,7 @@
     <packaging>mule-application</packaging>
     <name>template-banking-auth-server</name>
     <properties>
-        <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
+        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <oauth2.provider.module.version>1.0.0</oauth2.provider.module.version>
         <spring.module.version>1.2.0</spring.module.version>
         <spring.version>4.3.18.RELEASE</spring.version>
